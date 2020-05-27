@@ -1,0 +1,6 @@
+version: '3'
+services:
+  clubot:
+    build: .
+  redis:
+    image: "redis:6-buster"

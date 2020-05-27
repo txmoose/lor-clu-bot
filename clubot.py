@@ -15,8 +15,9 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 COMMAND_PREFIX = os.getenv('COMMAND_PREFIX')
 DATADRAGON_HOSTNAME = os.getenv('DATADRAGON_HOSTNAME')
 BOT_OWNER = os.getenv('BOT_OWNER')
+REDIS_HOST = os.getenv('REDIS_HOST')
 
-r = redis.Redis()
+r = redis.Redis(host=REDIS_HOST)
 
 def load_cache(card_set: str):
     """
