@@ -19,15 +19,16 @@ REDIS_HOST = os.getenv('REDIS_HOST')
 
 r = redis.Redis(host=REDIS_HOST)
 
-def load_cache(card_set: str):
+def load_card_cache(card_set: str):
     """
     Download card set json and load into Redis
 
     Arguments:
         card_set {str} -- set to download
     """
-    DATADRAGON_URL = f'https://{DATADRAGON_HOSTNAME}/latest/{card_set}/en_us/data/{card_set}-en_us.json'
-    cards = json.loads(requests.get(DATADRAGON_URL).content)
+    datadragon_url = f'https://{DATADRAGON_HOSTNAME}/latest/{card_set}/en_us/data/{card_set}-en_us.json'
+
+    cards = json.loads(requests.get(datadragon_url).content)
 
     for card in cards:
         card_code = card["cardCode"]
@@ -41,6 +42,18 @@ def load_cache(card_set: str):
         r.set(card["cardCode"], json.dumps(card))
 
 
+def load_keyword_cache():
+    """
+    Download keywords and load into Redis
+    """
+    datadragon_core = f'https://{DATADRAGON_HOSTNAME}/latest/core/en_us/data/globals-en_us.json'
+    core = json.loads(requests.get(datadragon_core).content)
+
+    keywords = core.get("keywords")
+    for keyword in keywords:
+        r.set(keyword["name"].lower(), keyword["description"])
+
+
 bot = commands.Bot(command_prefix=COMMAND_PREFIX)
 
 @bot.command(name='reload-cache', hidden=True)
@@ -49,9 +62,11 @@ async def reload_cache(ctx):
         await ctx.send(f"I'm sorry, {ctx.author}, but you can't do that.")
         return
     await ctx.send('Refreshing Set 1')
-    load_cache('set1')
+    load_card_cache('set1')
     await ctx.send('Refreshing Set 2')
-    load_cache('set2')
+    load_card_cache('set2')
+    await ctx.send('Refreshing Keywords')
+    load_keyword_cache()
     await ctx.send('Refresh Complete')
 
 
@@ -86,6 +101,17 @@ async def card_lookup(ctx, *, arg):
         for absolute_path in game_absolute_paths:
             await ctx.send(absolute_path)
     except:
-        await ctx.send(f"I couldn't find a card named {arg}.")    
+        await ctx.send(f"I couldn't find a card named {arg}.")
+
+
+@bot.command(name="keyword", help='Will attempt to look up the specified keyword')
+async def keyword_lookup(ctx, *, arg):
+    lookup_keyword = arg
+    try:
+        keyword_description = r.get(lookup_keyword)
+        await ctx.send(f'**{lookup_keyword}**\n```{keyword_description}```')
+    except:
+        await ctx.send(f"I couldn't find a keyword named {lookup_keyword}.")
+        
 
 bot.run(TOKEN)
