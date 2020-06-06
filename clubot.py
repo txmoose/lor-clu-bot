@@ -108,10 +108,10 @@ async def card_lookup(ctx, *, arg):
 async def keyword_lookup(ctx, *, arg):
     lookup_keyword = arg
     try:
-        keyword_description = r.get(lookup_keyword)
-        await ctx.send(f'**{lookup_keyword}**\n```{keyword_description}```')
+        keyword_description = r.get(lookup_keyword).decode('utf-8')
+        await ctx.send(f'**{lookup_keyword.capitalize()}**\n```{keyword_description}```')
     except:
-        await ctx.send(f"I couldn't find a keyword named {lookup_keyword}.")
-        
+        await ctx.send(f"I couldn't find a keyword named {lookup_keyword.capitalize()}.")
+
 
 bot.run(TOKEN)
